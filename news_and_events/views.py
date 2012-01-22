@@ -1,6 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from django.conf import settings
 from django.template import RequestContext
+from django.views.generic.dates import DateDetailView
 
 from contacts_and_people.models import Entity, default_entity
 from links.link_functions import object_links
@@ -148,6 +149,18 @@ def news_archive(request, slug=getattr(default_entity,"slug", None)):
         context,
         )
 
+class NewsArticleDateDetailView(DateDetailView):
+    template_name = "news_and_events/newsarticle.html"
+    model = NewsArticle
+    date_field = 'date'
+    context_object_name = "newsarticle"
+    month_format = '%m'
+
+    def get_context_data(self, **kwargs):
+        context = super(DateDetailView, self).get_context_data(**kwargs)
+        context['entity'] = self.object.get_hosted_by
+        context['meta'] = {"description": self.object.summary}
+        return context
 
 def newsarticle(request, slug):
     """
