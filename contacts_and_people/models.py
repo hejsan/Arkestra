@@ -46,12 +46,12 @@ class Site(models.Model):
 
     @property
     def maps(self):
-        return [map for building in building_set.all() if building.has_map]
+        # return self.building_set.filter(has_map = True)
+        return [building for building in self.building_set.all() if building.has_map]
          
 class BuildingManager(models.Manager):
     def get_by_natural_key(self, slug):
         return self.get(slug=slug)
-
 
 class Building(models.Model):
     """Each Building is on a Site."""
@@ -64,7 +64,7 @@ class Building(models.Model):
     postcode = models.CharField(max_length=9, null=True, blank=True)
     site = models.ForeignKey(Site)
     slug = models.SlugField(blank=True, help_text=u"Please leave blank/amend only if required", 
-        max_length=255, null=True, unique=True,)
+        max_length=255, null=True, unique=True)
     image = FilerImageField(null=True, blank=True)
     # for the place page
     summary =  models.TextField(verbose_name="Summary", max_length=256, default ="",
@@ -90,11 +90,11 @@ class Building(models.Model):
 
     def __unicode__(self):
         if self.name:
-            building_identifier = str(self.site) + ": " + self.name
+            building_identifier = unicode(self.site) + ": " + self.name
         elif self.street:
-            building_identifier = str(self.site) + ": " + self.number + " " + self.street
+            building_identifier = unicode(self.site) + ": " + self.number + " " + self.street
         else:
-            building_identifier = str(self.site) + ": " + self.postcode
+            building_identifier = unicode(self.site) + ": " + self.postcode
         return building_identifier
     
     def get_absolute_url(self):
@@ -114,7 +114,7 @@ class Building(models.Model):
         elif self.street:
             building_identifier = self.number + " " + self.street
         else:
-            building_identifier = str(self.site) + ": " + self.postcode
+            building_identifier = unicode(self.site) + ": " + self.postcode
         return building_identifier
     
     def get_postal_address(self):
@@ -149,6 +149,7 @@ class Building(models.Model):
         instance.place = self
         instance.view = "current"
         instance.format = "details image"
+        instance.order_by = "date"
         
         # create an instance of the plugin to see if the menu should have items
         plugin = news_and_events.cms_plugins.CMSNewsAndEventsPlugin()   
@@ -205,7 +206,7 @@ class EntityLite(models.Model):
     name = models.CharField(max_length=100, help_text="e.g. Section of Haematology")
     
     def __unicode__(self):
-        return str(self.name)
+        return unicode(self.name)
 
 
 class EntityManager(models.Manager):
@@ -298,8 +299,10 @@ class Entity(EntityLite, CommonFields):
     def get_absolute_url(self):
         if self.external_url:
             return self.external_url.url
+        elif self.get_website:
+            return "/contact/%s/" % self.slug
         else:
-            return "/entity/%s/" % self.slug
+            return "/contact/"
 
     def get_real_ancestor(self):
         """
@@ -510,7 +513,7 @@ class PersonLite(models.Model):
     surname = models.CharField(max_length=50)
     
     def __unicode__(self):
-        return str(self.given_name + " " + self.middle_names + " " + self.surname)
+        return unicode(self.given_name + " " + self.middle_names + " " + self.surname)
     
     def __getInitials(self):
         if self.given_name <> '' and self.middle_names <> '':
@@ -537,10 +540,10 @@ class Person(PersonLite, CommonFields):
     entities = models.ManyToManyField(Entity, related_name='people',
         through='Membership', blank=True, null=True)
     building = models.ForeignKey(Building, verbose_name='Specify building',
-        help_text=u"Specify a building for contact information - over-rides postal address", 
+        help_text=u"Only required if this Person <strong>Home entity</strong> has a different address", 
         blank=True, null=True, on_delete=models.SET_NULL)
     override_entity = models.ForeignKey(Entity, verbose_name='Specify entity',
-        help_text=u"Specify an entity for contact information - over-rides entity and postal address",
+        help_text=u"<strong>Temporarily specify</strong> an entity for contact information - over-rides entity and postal address",
         related_name='people_override', blank=True, null=True, on_delete=models.SET_NULL)
     please_contact = models.ForeignKey('self', help_text=u"Publish another person's details as contact information for this person",
         related_name='contact_for', blank=True, null=True, on_delete=models.SET_NULL)
@@ -556,7 +559,7 @@ class Person(PersonLite, CommonFields):
 
     def __unicode__(self):
         title = self.title or ""
-        return " ".join(name_part for name_part in [str(title), self.given_name, self.surname] if name_part)
+        return u" ".join(name_part for name_part in [unicode(title), self.given_name, self.surname] if name_part)
 
     def get_absolute_url(self):
         if self.external_url:
@@ -614,6 +617,12 @@ class Person(PersonLite, CommonFields):
         else:
             return self
 
+    @property
+    def real_entities(self):
+        # returns non-abstract entities the person belongs to
+        return Membership.objects.filter(person=self, entity__abstract_entity = False)
+    
+    
     def gather_entities(self):
         """
         Returns all the entities that a person belongs to, including implicit membership
@@ -683,9 +692,9 @@ class Membership(models.Model):
     
     def __unicode__(self):
         if self.display_role:
-            return str(self.entity.short_name) + "-" + str(self.display_role)
+            return unicode(self.entity.short_name) + "-" + unicode(self.display_role)
         else:
-            return str(self.role)
+            return unicode(self.role)
     
     def save(self):
         """

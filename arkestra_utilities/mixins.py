@@ -39,7 +39,6 @@ class SupplyRequestMixin(object):
         form_class.request = request
         return form_class
 
-
 class InputURLMixin(forms.ModelForm):
     input_url = forms.CharField(max_length=255, required = False,
         help_text=u"Enter the URL of an external item that you want <strong>automatically</strong> added to the database, but first check carefully using <strong>External URL</strong> (above) to make sure it's really not there.", 
@@ -56,7 +55,7 @@ class URLModelMixin(models.Model):
     external_url = models.ForeignKey(ExternalLink, related_name="%(class)s_item", blank=True, null=True,
         help_text=u"Select an item from the External Links database."
         )                              
-    slug = models.SlugField(unique=True, max_length=60, blank=True, help_text=u"Do not meddle with this unless you know exactly what you're doing!")
+    slug = models.SlugField(unique=True, max_length=60, blank=True, help_text=u"Do not meddle with this unless you know exactly what you're doing!", error_messages={"unique": "unique"})
 
     def __unicode__(self):
         return self.title
