@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime
 #app = contacts_and_people
 from django.db import models
 from django.db.utils import DatabaseError
@@ -24,6 +25,7 @@ from arkestra_utilities.mixins import URLModelMixin
 from links.models import ExternalLink
 
 import news_and_events
+import projects
 
 MULTIPLE_ENTITY_MODE = settings.MULTIPLE_ENTITY_MODE
 base_entity_id = settings.ARKESTRA_BASE_ENTITY
@@ -641,6 +643,12 @@ class Person(PersonLite, CommonFields):
             entitylist.add(entity)
             entitylist.update(entity.get_ancestors())
         return entitylist #set(entity for entity in entitylist if not entity.abstract_entity)
+
+    def get_projects(self):
+        return projects.models.Project.objects.filter(please_contact__id=self.pk) \
+            .filter(date__lte = datetime.today(), published=True, in_lists=True) \
+            .order_by('-date')
+
     
     def check_please_contact_has_loop(self, compare_to, person_list=None):
         if person_list==None:
