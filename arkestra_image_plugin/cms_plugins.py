@@ -53,9 +53,9 @@ def width_of_image_container(context, plugin):
 def width_of_image(plugin, image=None):
     # no plugin width?
     if not plugin.width:
-        if image:
+        if image and image.image:
             # use native image width
-            width = image.width
+            width = image.image.width
         else:
             # use container width
             width = plugin.container_width
