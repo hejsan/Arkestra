@@ -354,8 +354,8 @@ class ImageSetPublisher(CMSPluginBase):
             imageset.items = imageset.imageset_item.all()
             imageset.number_of_items = imageset.imageset_item.count()
             
-            # at least three items are required for a slider - just two is unaesthetic
-            if imageset.kind == "slider" and imageset.number_of_items > 2:
+            # at least two items are required for a slider
+            if imageset.kind == "slider" and imageset.number_of_items > 1:
                 imageset = slider(imageset)
 
             elif imageset.kind == "lightbox":
