@@ -47,7 +47,7 @@ class CMSProjectPlugin(ArkestraGenericPlugin, AutocompleteMixin, CMSPluginBase):
         this_list["links_to_other_items"] = self.projects_other_links
         print "**", this_list["links_to_other_items"] 
         this_list["heading_text"] = instance.heading_text
-        this_list["item_template"] = "arkestra/universal_plugin_list_item.html"
+        this_list["item_template"] = "projects/project_list_item.html"
         # the following should *also* check this_list["links_to_other_items"] - 
         # but then get_items() will need to call self.add_links_to_other_items() itself
         # this will then mean that news and events pages show two columns if one has links to other items
